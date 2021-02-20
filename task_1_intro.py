@@ -9,7 +9,7 @@ def CheckNanInColumn(df):
 
     # We see there are some columns with null values.
     # Before we start pre-processing, let's find out which of the columns have maximum null values
-    # print(df.count().sort_values())
+    print(df.count().sort_values())
     # print(df.isnull().sum())
 
     # number of missing values for each row having more than 10 missing values
@@ -21,17 +21,7 @@ def CheckNanInColumn(df):
     # Summary Stats for Numerical variables
     # print((df.describe())
 
-    # Check how data is null of average
-    # Evaporation_percent = (((df['Evaporation'].isnull().sum()) / 145461) * 100)
-    # Sunshine_percent = (((df['Sunshine'].isnull().sum()) / 145461) * 100)
-    # Cloud9am_percent = (((df['Cloud9am'].isnull().sum()) / 145461) * 100)
-    # Cloud3pm_percent = (((df['Cloud3pm'].isnull().sum()) / 145461) * 100)
-    # print("Evaporation percent", Evaporation_percent)
-    # print("Sunshine percent", Sunshine_percent)
-    # print("Cloud9am percent", Cloud9am_percent)
-    # print("Cloud3pm percent", Cloud3pm_percent)
-
-    print(weather['Location'].value_counts())
+    # print(weather['Location'].value_counts())
     # print(weather['WindGustDir'].value_counts())
     # print(weather['WindDir9am'].value_counts())
     # print(weather['WindDir3pm'].value_counts())
@@ -47,6 +37,38 @@ def CheckNanInColumn(df):
     # plt.ylabel('Percent of missing values', fontsize=15)
     # plt.title('Percent missing data by feature', fontsize=15)
     # plt.show()
+
+    # Check how data is null of average.............................................
+    # number_of_rows = df.shape[0]
+    # number_of_nan_in_column = df.isnull().sum(axis=0)
+    # print(
+    #     pd.concat([number_of_nan_in_column, (number_of_nan_in_column / number_of_rows * 100).round(1)], axis=1).rename(
+    #         columns={0: 'Number of NaN', 1: 'Number of NaN in %'}))
+
+    # Data types....................................................................
+    # print('Data types of this dataset :')
+    # print(list(df.dtypes.unique()))
+
+    # Categorical and numerical valuse.............................................
+    # categorical_type_columns = []
+    # numerical_type_columns = []
+    # for one_column_name in df:
+    #     if 'object' in str(df[one_column_name].dtype):
+    #         categorical_type_columns.append(one_column_name)
+    #     elif 'float' in str(df[one_column_name].dtype):
+    #         numerical_type_columns.append(one_column_name)
+    #
+    # print(categorical_type_columns)
+    # print()
+    # print(numerical_type_columns)
+    # print()
+    # print('Categorical type columns : {} / {}'.format(len(categorical_type_columns), len(df.columns)))
+    # print('Numerical type columns : {} / {}'.format(len(numerical_type_columns), len(df.columns)))
+
+    #cardinality of categorical columns ............................................
+    # print("Categorical column cardinality :")
+    # for var in categorical_type_columns:
+    #     print('{} : {} labels'.format(var, len(df[var].unique())))
 
 
 

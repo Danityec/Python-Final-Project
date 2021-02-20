@@ -4,10 +4,13 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 import pandas as pd
+from sklearn.utils import resample
+
 
 
 
 def categorical_to_numerical(df):
+
     WindGustDir_list = ['W', 'SE', 'N', 'SSE', 'E', 'S', 'WSW', 'SW', 'SSW', 'WNW', 'NW', 'ENE', 'ESE', 'NE', 'NNW', 'NNE']
     df['WindGustDir_bin'] = pd.Categorical(df.WindGustDir, ordered=False, categories=WindGustDir_list).codes+1
 
@@ -18,33 +21,35 @@ def categorical_to_numerical(df):
     df['WindDir3pm_bin'] = pd.Categorical(df.WindDir3pm, ordered=False, categories=WindDir3pm_list).codes+1
 
     RainToday_list = ['No', 'Yes']
-    df['RainToday_bin'] = pd.Categorical(df.RainToday, ordered=False, categories=RainToday_list).codes
+    df['RainToday_bin'] = pd.Categorical(df.RainToday, ordered=False, categories=RainToday_list).codes+1
 
     RainTomorrow_list = ['No', 'Yes']
-    df['RainTomorrow_bin'] = pd.Categorical(df.RainTomorrow, ordered=False, categories=RainTomorrow_list).codes
+    df['RainTomorrow_bin'] = pd.Categorical(df.RainTomorrow, ordered=False, categories=RainTomorrow_list).codes+1
 
     df['Location_bin'] = pd.Categorical(df.Location, ordered=False).codes
 
     return df.drop(['RainToday', 'RainTomorrow', 'WindGustDir', 'WindDir3pm', 'WindDir9am', 'Location'], axis=1)
 
-def clean_date(df):
+
+def dismantle_column_date(df):
     # parse the dates, currently coded as strings, into datetime format
-    # im have divided the date column into 3 different columns as 'day', 'month' and 'year'
+    # i have divided the date column into 3 different columns as 'day', 'month' and 'year'
     # to know which day of month in a particular year has more rainfall.
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Year'] = df['Date'].dt.year
-    df['Month'] = df['Date'].dt.month
-    df['Day'] = df['Date'].dt.day
+    tmp = df
+    tmp['Date'] = pd.to_datetime(df['Date'])
+    tmp['Year'] = tmp['Date'].dt.year
+    tmp['Month'] = tmp['Date'].dt.month
+    tmp['Day'] = tmp['Date'].dt.day
+    tmp.drop(["Date"], inplace=True, axis=1)
 
-    df.drop(["Date"], inplace=True, axis=1)
-
+    return(tmp)
 
 def statistics_in_numerical(df):
 
     # find numerical variables
     numerical = [var for var in df.columns if df[var].dtype != 'O']
-    # print('There are {} numerical variables\n'.format(len(numerical)))
-    # print('The numerical variables are :', numerical)
+    print('There are {} numerical variables\n'.format(len(numerical)))
+    print('The numerical variables are :', numerical)
 
     # view summary statistics in numerical variables
     weather_statistics_numerical = (round(df[numerical].describe()))
@@ -75,6 +80,14 @@ def draw_boxplots(df):
     fig.set_title('')
     fig.set_ylabel('WindSpeed3pm')
 
+
+def remove_row_outliers(df):
+    df.drop(df[(df["Rainfall"] > 250)].index, inplace=True)
+    df.drop(df[(df["Evaporation"] > 85)].index, inplace=True)
+    df.drop(df[(df["WindSpeed9am"] > 80)].index, inplace=True)
+    df.drop(df[(df["WindSpeed9am"] > 80)].index, inplace=True)
+
+    return df
 
 def histogram_plot(df):
     plt.figure(figsize=(15, 10))
@@ -109,22 +122,25 @@ def rows_duplicate(df):
 def different_values_same_date(df):
 
     # Check that there are no different values on the same date
-   print(df.drop_duplicates(subset=['Year', 'Month', 'Day'], keep='first'))
+   return(df.drop_duplicates(subset=['Year', 'Month', 'Day'], keep='first'))
 
 
 def row_with_more_10_missing_values(df):
 
     # number of missing values for each row having more than 10 missing values
-    print((df.isnull().sum(axis=1).sort_values(ascending=False) > 10).sum())
+    print("more than 10 missing values:", ((df.isnull().sum(axis=1).sort_values(ascending=False) > 10).sum()))
     print((df.isnull().sum(axis=1).sort_values(ascending=False) > 10))
-    return df.dropna((df.isnull().sum(axis=1).sort_values(ascending=False) > 10))
+    df.dropna((df.isnull().sum(axis=1).sort_values(ascending=False) > 10))
+    return df
 
+def check_outliers_with_zero(df):
+    # The only column that the value 0 cannot exist is humidity
+    zero = df[(df["Humidity9am"] == 0) | (df["Humidity3pm"] == 0)]
+    print("value 0 cannot exist is humidity:", len(zero))
 
-def check_outliers(df):
+    # df.replace(df[(df["Humidity9am"] == 0)].mean(), inplace=True)
+    # df.replace(df[(df["Humidity3pm"] == 0)].mean(), inplace=True)
 
-    # return((df['MinTemp'] >= -8.0) & (df['MinTemp'] < 34.0))
-    # return ((df['MaxTemp'] >= -8.0) & (df['MaxTemp'] < 34.0))
-    return df['MinTemp'].between(-8.0, 34.0, inclusive=False)
 
 
 def modified_heatmap(data):
@@ -135,44 +151,86 @@ def modified_heatmap(data):
 
 
 def fields_average(df):
+    # numerical - Replace the missing values nan with the mean if the column is numerical .
     df['MinTemp'].fillna(round((df['MinTemp'].mean()), 2), inplace=True)
     df['MaxTemp'].fillna(round((df['MaxTemp'].mean()), 2), inplace=True)
     df['WindSpeed9am'].fillna(round((df['WindSpeed9am'].mean()), 2), inplace=True)
     df['Temp9am'].fillna(round((df['Temp9am'].mean()), 2), inplace=True)
     df['Humidity9am'].fillna(round((df['Humidity9am'].mean()), 2), inplace=True)
     df['WindSpeed3pm'].fillna(round((df['WindSpeed3pm'].mean()), 2), inplace=True)
-    # df['RainToday'].fillna(round((df['RainToday'].mean()), 2), inplace=True)
     df['Rainfall'].fillna(round((df['Rainfall'].mean()), 2), inplace=True)
     df['Temp3pm'].fillna(round((df['Temp3pm'].mean()), 2), inplace=True)
-    # empty value in target class- what i do?
-    # df['WindDir3pm'].fillna(round((df['WindDir3pm'].mean()), 2), inplace=True)
     df['Humidity3pm'].fillna(round((df['Humidity3pm'].mean()), 2), inplace=True)
     df['WindGustSpeed'].fillna(round((df['WindGustSpeed'].mean()), 2), inplace=True)
-    # df['WindGustDir'].fillna(round((df['WindGustDir'].mean()), 2), inplace=True)
-    df['WindDir9am'].fillna(round((df['WindDir9am'].mean()), 2), inplace=True)
     df['Pressure9am'].fillna(round((df['Pressure9am'].mean()), 2), inplace=True)
     df['Pressure3pm'].fillna(round((df['Pressure3pm'].mean()), 2), inplace=True)
+
+
+    # categorical - Replace the missing values nan with the mode if the column is categorical
+    df['WindDir3pm_bin'].fillna((df['WindDir3pm_bin'].mode()[0]), inplace=True)
+    df['WindGustDir_bin'].fillna((df['WindGustDir_bin'].mode()[0]), inplace=True)
+    df['WindDir9am_bin'].fillna((df['WindDir9am_bin'].mode()[0]), inplace=True)
+    df['RainToday_bin'].fillna((df['RainToday_bin'].mode()[0]), inplace=True)
+    # empty value in target class- what i do? RainTomorrow
+    # df['RainTomorrow_bin'].fillna((df['RainTomorrow_bin'].mode()[0]), inplace=True)
+
+    return(df)
+
+
+def fill_nan_with_other_columns(df):
+    df['Sunshine'] = df.apply(
+        lambda row: fill_nan_with_other_columns(row['MaxTemp'], row['Humidity9am'], row['Humidity3pm'], row['Cloud3pm'], row['Cloud9am'], row['Temp3pm']), axis=1)
+    # df['Evaporation'] = df.apply(
+    #     lambda row: fill_nan_with_other_columns(row['redWardPlaced'], row['blueWardPlaced'], row['win']), axis=1)
+    # df['Cloud3pm'] = df.apply(
+    #     lambda row: fill_nan_with_other_columns(row['redWardPlaced'], row['blueWardPlaced'], row['win']), axis=1)
+    # df['Cloud9am'] = df.apply(
+    #     lambda row: fill_nan_with_other_columns(row['redWardPlaced'], row['blueWardPlaced'], row['win']), axis=1)
+    return df
 
 
 
 
 if __name__ == '__main__':
     weather = pd.read_csv("weather1.csv")
+
+    # check rows with duplicate values and
     # rows_duplicate(weather)
-    # clean_date(weather)
+
+    weather = row_with_more_10_missing_values(weather)
+
+
+    # divided the date column into 3 different columns as 'day', 'month' and 'year'
+    weather = dismantle_column_date(weather)
+
+    # different values with same date
+    # weather = different_values_same_date(weather)     ####### not work
+
+    # swipe categorical value to numerical value
     weather = categorical_to_numerical(weather)
-    # weather = row_with_more_10_missing_values(weather)
-    # weather = check_outliers(weather)
-    weather.to_csv('weather_new.csv')
-    # different_values_same_date(weather)
-    fields_average(weather)
 
-    print(len(weather))
-    weather.dropna(inplace=True)
-    modified_heatmap(weather)
+    # Filling values in columns by the average of the values in the column
+    weather = fields_average(weather)
+    # weather = fill_nan_with_other_columns(weather)
 
-    # statistics_in_numerical(weather)
-    # draw_boxplots(weather)
-    # histogram_plot(weather)
+    # chek Exceeding the value range
+    check_outliers_with_zero(weather)
+
+    # remove all value with nan fields: available 58,237 without nan
+    # weather.dropna(inplace=True)
+    # weather.to_csv("tmp2.csv")
+
+    weather = remove_row_outliers(weather)
+
+    # chek correlation
+    # modified_heatmap(weather)
+    weather.to_csv("tmp1.csv")
+
+    # statistics_in_numerical(weather)   #columns may contain outliers.
+    # draw_boxplots(weather)   # plot the histograms to check distributions to find out if they are normal or skewed.
+    histogram_plot(weather)
+
     plt.show()
+
+
 

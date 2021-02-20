@@ -16,6 +16,12 @@ def corr(df):
     ax.set_yticklabels(ax.get_yticklabels(), rotation=30)
     plt.show()
 
+
+# def identifying_days(df):
+
+
+
 if __name__ == '__main__':
     weather = pd.read_csv("weather1.csv")
     corr(weather)
+    # identifying_days(weather)
