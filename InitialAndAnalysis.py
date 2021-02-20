@@ -188,7 +188,10 @@ def fill_nan_with_other_columns(df):
     #     lambda row: fill_nan_with_other_columns(row['redWardPlaced'], row['blueWardPlaced'], row['win']), axis=1)
     return df
 
-
+def balance_target_class(df):
+    # Plotting balance between positive and negative classes
+    weather['RainTomorrow'].value_counts().plot(kind='bar')
+    plt.show()
 
 
 if __name__ == '__main__':
