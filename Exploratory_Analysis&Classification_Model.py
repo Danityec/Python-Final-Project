@@ -160,10 +160,8 @@ def baseline_tree():
 
 
 def manipulated_data_tree(df):
-    target = df[['RainTomorrow_bin']]
-    df.drop(['RainTomorrow_bin'],  inplace=True,  axis=1)
     df = df[['WindGustSpeed_Humidity9_Rainfall', 'Cloud_RainHum3_Pressure3pm', 'RainHum3_Pressure3pm', 'Pressure3pm', 'Sunshine', 'differenceHum3Temp3']]
-    tree_plot(df, target)
+    return df
 
 
 def tree_plot(data, target):
@@ -177,27 +175,26 @@ def tree_plot(data, target):
 
 
 def report_decision_tree(df, target):
-
+    # Create a decision tree classifier model
+    # train size is 80%, and testing is 20%
     x_train, x_test, y_train, y_test = train_test_split(df, target, test_size=0.2, random_state=1)
-    clf = DecisionTreeClassifier()
+    clf = DecisionTreeClassifier(max_depth=8)
     clf = clf.fit(x_train, y_train)
     y_pred = clf.predict(x_test)
 
     print(metrics.classification_report(y_test, y_pred))
-    tree_visual_png(df, target, 'tree_png', 3)
     return clf
 
 
-def tree_visual_png(df, target, img_name, depth=None):
+def tree_visual_png(df, target ,img_name):
     # Print the decision tree as a stylish PNG image
-    clf = report_decision_tree(df, target, depth=None)
+    clf = report_decision_tree(df, target)
     dot_data = StringIO()
     export_graphviz(clf, out_file=dot_data, filled=True, rounded=True,
                     feature_names=df.columns, class_names=['0', '1'])
     graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
     graph.write_png(img_name)
     Image(graph.create_png())
-
 
 
 if __name__ == '__main__':
@@ -211,4 +208,6 @@ if __name__ == '__main__':
 
     weather = check_correlation_decision_tree(weather)
     # baseline_tree()
-    weather = manipulated_data_tree(weather)
+    tmp = manipulated_data_tree(weather)
+    target = weather[['RainTomorrow_bin']]
+    tree_visual_png(tmp, target, 'tree.png')
