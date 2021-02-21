@@ -11,6 +11,7 @@ def cutting_columns_by_values(df):
 
 
 def percent_missing_data_by_feature(df):
+    # By percentages and numeric value some values are missing in each attribute
     data_na = (df.isnull().sum() / len(df)) * 100
     data_miss = data_na.drop(data_na[data_na == 0].index).sort_values(ascending=False)[:30]
     f, ax = plt.subplots(figsize=(15, 12))
@@ -23,7 +24,7 @@ def percent_missing_data_by_feature(df):
 
 
 def data_missing_by_average(df):
-    # Check how data is null of average
+    # Checking how data is null of average
     # We see there are some columns with null values.
     # Before we start pre-processing, let's find out which of the columns have maximum null values
     number_of_rows = df.shape[0]
@@ -34,6 +35,7 @@ def data_missing_by_average(df):
 
 
 def data_types(df):
+    #What types of values exist in the data
     print('Data types of this dataset :')
     print(list(df.dtypes.unique()))
 
@@ -64,12 +66,12 @@ if __name__ == '__main__':
     weather = pd.read_csv("weather1.csv")
 
     print('Size of weather data frame is :', weather.shape)
-    # print(weather.head())
-    # print(weather.info())
+    print(weather.head())
+    print(weather.info())
 
     summary_categorical_numerical_values(weather)
-    # data_types(weather)
-    # data_missing_by_average(weather)
-    # cutting_columns_by_values(weather)
-    # percent_missing_data_by_feature(weather)
+    data_types(weather)
+    data_missing_by_average(weather)
+    cutting_columns_by_values(weather)
+    percent_missing_data_by_feature(weather)
 
